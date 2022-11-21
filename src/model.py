@@ -1,5 +1,7 @@
 import math
 
+DENORMAL = False
+
 def to_binary(x):
     return list(reversed([int(c == '1') for c in f"{x:08b}"]))
 
@@ -25,12 +27,19 @@ def to_float(x, SIGN=1, EXP=4, EXPBIAS=7, MANT=3):
         if mant == 0 and sign == 1:
             return math.nan
         # Denormal (or return 0 if don't want to support)
-        return (-1.0)**sign * 2 ** (1 - EXPBIAS) * (0 + mant / 2**MANT)
+        if DENORMAL:
+            return (-1.0)**sign * 2 ** (1 - EXPBIAS) * (0 + mant / 2**MANT)
+        else:
+            return 0
 
 # All the testcases from half precision wikipedia page
 assert to_float(0b0_00000_0000000000, EXP=5, EXPBIAS=15, MANT=10) == 0.0
-assert round(to_float(0b0_00000_0000000001, EXP=5, EXPBIAS=15, MANT=10),15) == 0.000000059604645
-assert round(to_float(0b0_00000_1111111111, EXP=5, EXPBIAS=15, MANT=10),12) == 0.000060975552
+if DENORMAL:
+    assert round(to_float(0b0_00000_0000000001, EXP=5, EXPBIAS=15, MANT=10),15) == 0.000000059604645
+    assert round(to_float(0b0_00000_1111111111, EXP=5, EXPBIAS=15, MANT=10),12) == 0.000060975552
+else:
+    assert round(to_float(0b0_00000_0000000001, EXP=5, EXPBIAS=15, MANT=10),15) == 0.0
+    assert round(to_float(0b0_00000_1111111111, EXP=5, EXPBIAS=15, MANT=10),12) == 0.0
 assert round(to_float(0b0_00001_0000000000, EXP=5, EXPBIAS=15, MANT=10),14) == 0.00006103515625
 assert round(to_float(0b0_01101_0101010101, EXP=5, EXPBIAS=15, MANT=10),8) == 0.33325195
 assert round(to_float(0b0_01110_1111111111, EXP=5, EXPBIAS=15, MANT=10),8) == 0.99951172
@@ -52,6 +61,9 @@ def closest_fp8(f):
     distances = [abs(all_fp8[i] - f) for i in range(len(all_fp8))]
     min_distance = min(distances)
     minimums = [i for i in range(len(all_fp8)) if distances[i] == min_distance]
+    # If flushing denormal to 0, lots of representations for 0 - use canonical one.
+    if not DENORMAL:
+        minimums = [m for m in minimums if to_float(m) != 0.0 or m == 0b0_0000_000]
     if len(minimums) == 1:
         return minimums[0]
     elif len(minimums) == 2:
@@ -62,7 +74,7 @@ def closest_fp8(f):
             return minimums[1]
     elif math.isnan(f):
         return 0b1_0000_000
-    raise ValueError
+    raise ValueError(f"Don't know what to do with input {f} with {len(minimums)=}")
 
 def get_8bit_op(fp_op):
     def op_8bit(a, b):

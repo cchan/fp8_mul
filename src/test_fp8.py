@@ -21,8 +21,8 @@ async def test_all_inputs(dut):
     fp8_mul_model = get_8bit_op(lambda a, b: a * b)
 
     # TODO: Test in random order
-    for i in [0b01010101]:
-        for j in [0b10101010]:
+    for i in range(256):
+        for j in range(256):
             in1 = to_binary(i)
             in2 = to_binary(j)
             await store(0, 0, in1[:4])

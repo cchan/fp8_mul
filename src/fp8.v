@@ -65,9 +65,13 @@ module fp8mul (
   output [3:0] exp_out,
   output [2:0] mant_out
 );
-    assign sign_out = sign1 ^ sign2;
-    assign exp_out = (exp1 == 0 || exp2 == 0) ? 0 : (exp1 + exp2 - 7);  // Exponent bias is 7
-
-    wire [7:0] full_mant = ({1'b1, mant1} * {1'b1, mant2});
-    assign mant_out = full_mant[6:4];
+    parameter EXP_BIAS = 7;
+    wire [7:0] full_mant = ({exp1 != 0, mant1} * {exp2 != 0, mant2});
+    wire isnan = (sign1 == 1 && exp1 == 0 && mant1 == 0) || (sign2 == 1 && exp2 == 0 && mant2 == 0);
+    wire overflow_mant = full_mant[7];  // 01001000
+    wire underflow = (exp1 + exp2) < 1 - (overflow_mant || (full_mant[6] && (full_mant[5:0] != 0))) + EXP_BIAS;
+    assign exp_out = (exp1 == 0 || exp2 == 0 || isnan || underflow) ? 0 : (exp1 + exp2 - EXP_BIAS + overflow_mant);  // Exponent bias is 7
+    wire [6:0] shifted_mant = overflow_mant ? full_mant[7:1] : full_mant[6:0];
+    assign mant_out = (exp1 == 0 || exp2 == 0 || isnan || underflow) ? 0 : (shifted_mant[6:4] + (shifted_mant[3:0] > 8 || (shifted_mant[3:0] == 8 && shifted_mant[4])));
+    assign sign_out = ((sign1 ^ sign2) && (exp1 != 0 && exp2 != 0)) || isnan;
 endmodule
