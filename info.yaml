@@ -2,10 +2,9 @@
 # TinyTapeout project information
 project:
   wokwi_id:    0        # If using wokwi, set this to your project's ID
-#  source_files:        # If using an HDL, set wokwi_id as 0 and uncomment and list your source files here. Source files must be in ./src
-#    - counter.v
-#    - decoder.v
-#  top_module:  "seven_segment_seconds"      # put the name of your top module here, make it unique by prepending your github username
+  source_files:        # If using an HDL, set wokwi_id as 0 and uncomment and list your source files here. Source files must be in ./src
+    - fp8.v
+  top_module:  "cchan_fp8_multiplier"      # put the name of your top module here, make it unique by prepending your github username
 
 # As everyone will have access to all designs, try to make it easy for someone new to your design to know what
 # it does and how to operate it.
@@ -14,33 +13,36 @@ project:
 #
 # This info will be automatically collected and used to make a datasheet for the chip.
 documentation: 
-  author:       ""      # Your name
-  discord:      ""      # Your discord handle - make sure to include the # part as well
-  title:        ""      # Project title
-  description:  ""      # Short description of what your project does
-  how_it_works: ""      # Longer description of how the project works
-  how_to_test:  ""      # Instructions on how someone could test your project, include things like what buttons do what and how to set the clock if needed
+  author:       "Clive Chan"      # Your name
+  discord:      "mrgoose#9005"      # Your discord handle - make sure to include the # part as well
+  title:        "8-bit (E4M3) Floating Point Multiplier"      # Project title
+  description:  "8-bit (E4M3) Floating Point Multiplier"      # Short description of what your project does
+  how_it_works: >
+    A small mechanism in front to fill up two 8-bit buffers in halves,
+    followed by the actual 8-bit multiplier.
+  how_to_test:  >
+    cd src && make
   external_hw:  ""      # Describe any external hardware needed
-  language:     "wokwi" # other examples include Verilog, Amaranth, VHDL, etc
+  language:     "Verilog" # other examples include Verilog, Amaranth, VHDL, etc
   doc_link:     ""      # URL to longer form documentation, eg the README.md in your repository
   clock_hz:     0       # Clock frequency in Hz (if required) we are expecting max clock frequency to be ~6khz. Provided on input 0.
   picture:      ""      # relative path to a picture in your repository
   inputs:               # a description of what the inputs do
     - clock
-    - reset
-    - none
-    - none
-    - none
-    - none
-    - none
-    - none
+    - ctrl0
+    - ctrl1
+    - ctrl2
+    - data0
+    - data1
+    - data2
+    - data3
   outputs:
-    - segment a         # a description of what the outputs do
-    - segment b
-    - segment c
-    - segment d
-    - segment e
-    - segment f
-    - segment g
-    - none
+    - sign         # a description of what the outputs do
+    - exponent
+    - exponent
+    - exponent
+    - exponent
+    - mantissa
+    - mantissa
+    - mantissa
 
